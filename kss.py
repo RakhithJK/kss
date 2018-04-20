@@ -123,6 +123,7 @@ def augment(font):
     cgj(font)
     zwsp(font)
     add_lookups(font)
+    font.hhea_linegap = int((MAX_EXTRA_ROWS - (1 - CLUSTER_Y_SCALE)) * font.ascent)
     glyph_names = []
     for glyph in font.selection.select((b'ranges', b'unicode'), 0xE000, 0xF8FF).byGlyphs:
         glyph_names.append(glyph.glyphname)
