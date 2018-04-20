@@ -30,6 +30,14 @@ def cgj(font):
     glyph.glyphclass = b'mark'
     glyph.width = 0
 
+def zwsp(font):
+    glyph = font.createChar(0x200B, 'uni200B')
+    glyph.glyphclass = b'baseglyph'
+    glyph.width = 0
+    glyph = font.createChar(-1, 'uni200B.1')
+    glyph.glyphclass = b'baseglyph'
+    glyph.width = 0
+
 def add_lookups(font):
     font.addLookup("'mkmk'",
         'gpos_mark2mark',
@@ -111,6 +119,7 @@ TRANSFORMS = {
 
 def augment(font):
     cgj(font)
+    zwsp(font)
     add_lookups(font)
     glyph_names = []
     for glyph in font.selection.select((b'ranges', b'unicode'), 0xE000, 0xF8FF).byGlyphs:
@@ -133,6 +142,14 @@ def augment(font):
                             dst=dst.__name__))
                 fea.write('}} {};\n\n'.format(dst.__name__))
             fea.write(
+                    'feature ccmp {\n'
+                    '    substitute uni200B by uni200B.1 uni200B.1;\n'
+                    '} ccmp;\n'
+                    '\n'
+                    'feature ccmp {\n'
+                    '    substitute uni200B.1 uni200B.1 by uni200B;\n'
+                    '} ccmp;\n'
+                    '\n'
                     'feature rclt {\n'
                     "    substitute [@kss1init @kss1 @kss2init] @kss' lookup kss1;\n"
                     "    substitute @kss' lookup kss1init uni034F' @kss;\n"
