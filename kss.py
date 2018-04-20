@@ -152,16 +152,16 @@ def augment(font):
                     '    substitute uni200B.1 uni200B.1 by uni200B;\n'
                     '} ccmp;\n'
                     '\n'
-                    'feature rclt {\n'
+                    'feature ccmp {\n'
                     "    substitute [@kss1init @kss1 @kss2init] @kss' lookup kss1;\n"
                     "    substitute @kss' lookup kss1init uni034F' @kss;\n"
                     "    substitute @kss' lookup kss2init @kss;\n"
-                    '} rclt;\n'
+                    '} ccmp;\n'
                     '\n'
-                    'feature rclt {\n'
+                    'feature ccmp {\n'
                     "    substitute [@kss2init @kss2] @kss1' lookup kss3;\n"
                     "    substitute @kss1' lookup kss2 @kss1;\n"
-                    '} rclt;\n'
+                    '} ccmp;\n'
                     '\n'
                     'feature mark {\n')
             for is_kss1init in [True, False]:
