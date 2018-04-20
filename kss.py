@@ -23,6 +23,8 @@ import tempfile
 import fontforge
 import psMat
 
+CLUSTER_Y_SCALE = 0.8
+MAX_EXTRA_ROWS = 3
 INTRA_CLUSTER_GAP = 0.04
 
 def cgj(font):
@@ -56,7 +58,7 @@ def kss1init(font, nominal_glyph):
     glyph = font.createChar(-1, nominal_glyph.glyphname + '.kss1init')
     glyph.glyphclass = b'baseglyph'
     nominal_glyph.draw(glyph.glyphPen())
-    glyph.transform(psMat.scale(1, 0.8))
+    glyph.transform(psMat.scale(1, CLUSTER_Y_SCALE))
     glyph.transform(psMat.translate(0, nominal_glyph.boundingBox()[3] - glyph.boundingBox()[3]))
     glyph.width = nominal_glyph.width
     glyph.addAnchorPoint('cluster-init', 'base', nominal_glyph.width, glyph.boundingBox()[1] - INTRA_CLUSTER_GAP * nominal_glyph.width)
@@ -66,7 +68,7 @@ def kss1(font, nominal_glyph):
     glyph.glyphclass = b'mark'
     nominal_glyph.draw(glyph.glyphPen())
     glyph.transform(psMat.translate(-nominal_glyph.width, 0))
-    glyph.transform(psMat.scale(1, 0.8))
+    glyph.transform(psMat.scale(1, CLUSTER_Y_SCALE))
     glyph.transform(psMat.translate(0, nominal_glyph.boundingBox()[3] - glyph.boundingBox()[3]))
     glyph.width = 0
     glyph.addAnchorPoint('cluster-next', 'basemark', 0, glyph.boundingBox()[1] - INTRA_CLUSTER_GAP * nominal_glyph.width)
@@ -77,7 +79,7 @@ def kss2init(font, nominal_glyph):
     glyph = font.createChar(-1, nominal_glyph.glyphname + '.kss2init')
     glyph.glyphclass = b'baseglyph'
     nominal_glyph.draw(glyph.glyphPen())
-    glyph.transform(psMat.scale(0.5, 0.8))
+    glyph.transform(psMat.scale(0.5, CLUSTER_Y_SCALE))
     glyph.transform(psMat.translate(0, nominal_glyph.boundingBox()[3] - glyph.boundingBox()[3]))
     glyph.width = nominal_glyph.width
     glyph.addAnchorPoint('cluster-init', 'base', nominal_glyph.width, 0)
@@ -87,7 +89,7 @@ def kss2(font, nominal_glyph):
     glyph.glyphclass = b'mark'
     nominal_glyph.draw(glyph.glyphPen())
     glyph.transform(psMat.translate(-nominal_glyph.width, 0))
-    glyph.transform(psMat.scale(0.5, 0.8))
+    glyph.transform(psMat.scale(0.5, CLUSTER_Y_SCALE))
     glyph.transform(psMat.translate(-nominal_glyph.width / 2, 0))
     glyph.transform(psMat.translate(0, nominal_glyph.boundingBox()[3] - glyph.boundingBox()[3]))
     glyph.addAnchorPoint('cluster-next', 'basemark', 0, 0)
@@ -100,7 +102,7 @@ def kss3(font, nominal_glyph):
     glyph.glyphclass = b'mark'
     nominal_glyph.draw(glyph.glyphPen())
     glyph.transform(psMat.translate(-nominal_glyph.width, 0))
-    glyph.transform(psMat.scale(0.5, 0.8))
+    glyph.transform(psMat.scale(0.5, CLUSTER_Y_SCALE))
     glyph.transform(psMat.translate(0, nominal_glyph.boundingBox()[3] - glyph.boundingBox()[3]))
     glyph.addAnchorPoint('cluster-next', 'basemark', 0, 0)
     glyph.addAnchorPoint('cluster-next', 'mark', 0, 0)
@@ -159,7 +161,19 @@ def augment(font):
                     'feature rclt {\n'
                     "    substitute [@kss2init @kss2] @kss1' lookup kss3;\n"
                     "    substitute @kss1' lookup kss2 @kss1;\n"
-                    '} rclt;\n')
+                    '} rclt;\n'
+                    '\n'
+                    'feature mark {\n')
+            for is_kss1init in [True, False]:
+                for rows in range(MAX_EXTRA_ROWS, 0, -1):
+                    y = int((rows - (1 - CLUSTER_Y_SCALE)) * font.ascent)
+                    if is_kss1init:
+                        fea.write("    position @kss1init' <0 {} 0 0>".format(y))
+                    else:
+                        fea.write("    position @kss2init' <0 {} 0 0> @kss3".format(y))
+                    fea.write(' @kss2 @kss3' * (rows - 1))
+                    fea.write(' [@kss1 @kss2];\n')
+            fea.write('} mark;\n')
         font.mergeFeature(fea_path)
     finally:
         os.remove(fea_path)
